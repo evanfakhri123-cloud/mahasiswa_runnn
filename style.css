@@ -1,0 +1,48 @@
+:root{
+  --bg1:#1b1f4b;--bg2:#0d1026;--card:rgba(255,255,255,.08);--bd:rgba(255,255,255,.18);
+  --fg:#f2f4ff;--p1:#4da3ff;--p2:#ff5d6c;--gold:#ffd166;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;color:var(--fg);text-align:center;
+  font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+  background:radial-gradient(1200px 600px at 50% -10%,var(--bg1),var(--bg2)) fixed;
+}
+main{max-width:860px;margin:0 auto;padding:14px 12px 28px}
+h1{font-family:'Press Start 2P',monospace;font-size:clamp(14px,3.6vw,26px);margin:8px 0 10px;
+  color:var(--gold);text-shadow:3px 3px 0 #b5651d,0 0 24px rgba(255,209,102,.35);line-height:1.4}
+header p{margin:0 0 14px;opacity:.8;font-size:.9rem}
+button{font:inherit;color:var(--fg);cursor:pointer;border:1px solid var(--bd);background:var(--card);
+  padding:10px 16px;border-radius:12px;backdrop-filter:blur(6px);transition:transform .08s,background .2s}
+button:active{transform:scale(.96)}
+.modes{display:inline-flex;gap:4px;padding:4px;border-radius:14px;background:var(--card);border:1px solid var(--bd);margin-bottom:12px}
+.modes button{border:0;background:transparent;padding:8px 18px}
+.modes button.on{background:linear-gradient(135deg,var(--p1),#7b61ff);font-weight:700;box-shadow:0 4px 14px rgba(77,163,255,.4)}
+.hud{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
+.card{flex:1;max-width:200px;padding:8px 10px;border-radius:12px;background:var(--card);border:1px solid var(--bd);
+  display:flex;flex-direction:column;gap:4px}
+.card span{font-size:.7rem;letter-spacing:.12em;opacity:.75}
+.card b{font-family:'Press Start 2P',monospace;font-size:clamp(12px,3vw,17px);font-weight:400}
+.p1{border-color:var(--p1);box-shadow:0 0 14px rgba(77,163,255,.25)}.p1 span{color:var(--p1)}
+.p2{border-color:var(--p2);box-shadow:0 0 14px rgba(255,93,108,.25)}.p2 span{color:var(--p2)}
+.hi b{color:var(--gold)}
+.stage{position:relative;border-radius:16px;overflow:hidden;border:3px solid rgba(255,255,255,.25);
+  box-shadow:0 18px 50px rgba(0,0,0,.55)}
+canvas{display:block;width:100%;height:auto;touch-action:none;image-rendering:pixelated}
+#overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:rgba(10,12,35,.72);backdrop-filter:blur(3px);padding:12px}
+#overlay.hide{display:none}
+#overlay h2{font-family:'Press Start 2P',monospace;font-size:clamp(14px,4vw,28px);margin:0;color:var(--gold);line-height:1.5}
+#overlay p{margin:0;opacity:.85}
+#go{font-family:'Press Start 2P',monospace;font-size:clamp(11px,2.6vw,15px);padding:14px 22px;border:0;
+  background:linear-gradient(135deg,#ffb347,#ff5d6c);box-shadow:0 6px 0 #a3283a,0 10px 24px rgba(255,93,108,.4)}
+#go:active{box-shadow:0 2px 0 #a3283a;transform:translateY(4px)}
+.pad{display:flex;gap:10px;margin-top:12px}
+.pad>div{flex:1;display:flex;gap:6px}
+.pad button{flex:1;padding:16px 4px;font-size:.85rem;user-select:none;-webkit-user-select:none;touch-action:none}
+.b1{border-color:var(--p1)}.b2{border-color:var(--p2)}
+.keys{font-size:.8rem;opacity:.85;margin-top:14px;line-height:1.7}
+.k1{color:var(--p1);font-weight:700}.k2{color:var(--p2);font-weight:700}
+@media (hover:hover) and (pointer:fine){.pad{display:none}}

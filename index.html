@@ -4,191 +4,45 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mahasiswa Runner</title>
-<style>
-:root{--bg:#f4f4f4;--fg:#333;--card:#fff;--bd:#ccc;--ac:#2b6cb0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1c1e;--fg:#eee;--card:#2a2a2d;--bd:#444;--ac:#63a4ff}}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,sans-serif;text-align:center}
-h1{font-size:1.3rem;margin:12px 8px 4px}
-p.s{margin:0 8px 8px;font-size:.85rem;opacity:.8}
-#wrap{max-width:820px;margin:0 auto;padding:0 8px}
-canvas{width:100%;background:#f7f7f7;border:2px solid var(--bd);border-radius:8px;touch-action:none;display:block}
-.bar{display:flex;gap:8px;justify-content:center;margin:8px 0;flex-wrap:wrap}
-button{font:inherit;padding:10px 16px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--fg);cursor:pointer}
-button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
-.pad{display:flex;gap:8px;justify-content:space-between;margin-top:8px}
-.pad div{flex:1;display:flex;gap:6px}
-.pad button{flex:1;padding:16px 4px;user-select:none;-webkit-user-select:none;touch-action:none}
-.k{font-size:.8rem;opacity:.8;margin-top:6px}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="wrap">
-<h1>🎓 Mahasiswa Runner</h1>
-<p class="s">Hindari buku, laptop, tugas, dosen &amp; revisi. Bertahan paling lama!</p>
-<div class="bar">
-<button id="m1">1 Pemain</button>
-<button id="m2" class="on">2 Pemain</button>
-<button id="go">▶ Mulai</button>
-</div>
-<canvas id="c" width="800" height="400"></canvas>
-<div class="pad">
-<div><button id="p1j">P1 Lompat</button><button id="p1d">P1 Tunduk</button></div>
-<div id="p2pad"><button id="p2j">P2 Lompat</button><button id="p2d">P2 Tunduk</button></div>
-</div>
-<p class="k">P1 (biru): W / Spasi = lompat, S = tunduk &nbsp;|&nbsp; P2 (merah): ↑ = lompat, ↓ = tunduk</p>
-</div>
-<script>
-const cv=document.getElementById('c'),ctx=cv.getContext('2d');
-const W=800,LH=200,GY=165;
-let mode=2,state='menu',players=[],obs=[],speed,dist,frame,hi=0,acc=0,last=0;
-const keys={};
-const defs=[
-{e:'📚',n:'Buku',w:30,h:30,b:0},
-{e:'💻',n:'Laptop',w:36,h:34,b:0},
-{e:'🗂️',n:'Tugas',w:34,h:48,b:0},
-{e:'🧑‍🏫',n:'Dosen',w:36,h:62,b:0},
-{e:'📄',n:'Revisi!',w:34,h:28,b:36,air:1}
-];
-function reset(){
- players=[];
- const cols=['#2b6cb0','#d64545'];
- for(let i=0;i<mode;i++)players.push({y:0,vy:0,duck:false,dead:false,score:0,col:cols[i],name:'P'+(i+1)});
- obs=[];speed=6;dist=0;frame=0;
-}
-function setMode(m){
- mode=m;
- document.getElementById('m1').className=m==1?'on':'';
- document.getElementById('m2').className=m==2?'on':'';
- document.getElementById('p2pad').style.display=m==2?'flex':'none';
- cv.height=LH*m;state='menu';reset();draw();
-}
-document.getElementById('m1').onclick=()=>setMode(1);
-document.getElementById('m2').onclick=()=>setMode(2);
-document.getElementById('go').onclick=start;
-function start(){reset();state='run';}
-const ctl=[{j:['KeyW','Space'],d:['KeyS']},{j:['ArrowUp'],d:['ArrowDown']}];
-addEventListener('keydown',e=>{
- if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();
- keys[e.code]=true;
- if(state!='run'&&(e.code=='Enter'||e.code=='Space'))start();
-});
-addEventListener('keyup',e=>keys[e.code]=false);
-// tombol sentuh
-[['p1j','P1J'],['p1d','P1D'],['p2j','P2J'],['p2d','P2D']].forEach(([id,k])=>{
- const b=document.getElementById(id);
- b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;if(state!='run')start()});
- ['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,()=>keys[k]=false));
-});
-function down(i,t){
- const c=ctl[i];
- if(t=='j')return c.j.some(k=>keys[k])||keys['P'+(i+1)+'J'];
- return c.d.some(k=>keys[k])||keys['P'+(i+1)+'D'];
-}
-function update(){
- frame++;speed=Math.min(15,6+dist/1800);dist+=speed;
- players.forEach((p,i)=>{
-  if(p.dead)return;
-  p.score=Math.floor(dist/10);
-  const onG=p.y<=0;
-  if(onG&&down(i,'j')){p.vy=12.5;p.y=0.01}
-  p.duck=onG&&down(i,'d');
-  if(!onG&&down(i,'d'))p.vy-=1.2;
-  if(p.y>0||p.vy>0){p.vy-=0.65;p.y+=p.vy;if(p.y<=0){p.y=0;p.vy=0}}
- });
- obs.forEach(o=>o.x-=speed);
- obs=obs.filter(o=>o.x>-80);
- const lastO=obs[obs.length-1];
- const gap=280+Math.random()*260+speed*14;
- if(!lastO||lastO.x<W-gap){
-  let pool=dist>1500?defs:defs.slice(0,4);
-  const d=pool[Math.floor(Math.random()*pool.length)];
-  obs.push({...d,x:W+20});
- }
- players.forEach(p=>{
-  if(p.dead)return;
-  const ph=p.duck?30:52,px=60+8,pw=28;
-  for(const o of obs){
-   const ox=o.x+6,ow=o.w-10;
-   if(px+pw>ox&&px<ox+ow&&p.y+4<o.b+o.h-4&&p.y+ph-4>o.b+4){p.dead=true;break}
-  }
- });
- if(players.every(p=>p.dead)){
-  state='over';hi=Math.max(hi,...players.map(p=>p.score));
- }
-}
-function drawStudent(p,top){
- const x=60,gy=top+GY-p.y,f=Math.floor(frame/5)%2;
- ctx.save();
- if(p.dead)ctx.globalAlpha=.5;
- if(p.duck){
-  ctx.fillStyle='#333';ctx.fillRect(x+4,gy-8,30,8);
-  ctx.fillStyle=p.col;ctx.fillRect(x,gy-26,34,18);
-  ctx.fillStyle='#8a5a2b';ctx.fillRect(x-6,gy-22,8,14);
-  ctx.fillStyle='#f1c9a0';ctx.fillRect(x+30,gy-30,16,16);
-  ctx.fillStyle='#222';ctx.fillRect(x+28,gy-32,18,6);
-  ctx.fillRect(x+40,gy-24,3,3);
- }else{
-  ctx.fillStyle='#333';
-  if(p.y>0||p.dead){ctx.fillRect(x+8,gy-14,7,14);ctx.fillRect(x+20,gy-14,7,14)}
-  else if(f){ctx.fillRect(x+8,gy-14,7,14);ctx.fillRect(x+20,gy-8,7,8)}
-  else{ctx.fillRect(x+8,gy-8,7,8);ctx.fillRect(x+20,gy-14,7,14)}
-  ctx.fillStyle=p.col;ctx.fillRect(x+5,gy-36,24,24);
-  ctx.fillStyle='#8a5a2b';ctx.fillRect(x-4,gy-34,9,20);
-  ctx.fillStyle='#f1c9a0';ctx.fillRect(x+8,gy-52,20,16);
-  ctx.fillStyle='#222';ctx.fillRect(x+6,gy-55,24,7);ctx.fillRect(x+22,gy-46,3,3);
-  if(p.dead){ctx.fillStyle='#222';ctx.fillText('x',x+20,gy-42)}
- }
- ctx.restore();
-}
-function draw(){
- ctx.clearRect(0,0,cv.width,cv.height);
- ctx.textBaseline='alphabetic';
- players.forEach((p,i)=>{
-  const top=i*LH;
-  ctx.fillStyle='#f7f7f7';ctx.fillRect(0,top,W,LH);
-  ctx.strokeStyle='#555';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(0,top+GY);ctx.lineTo(W,top+GY);ctx.stroke();
-  ctx.fillStyle='#bbb';
-  for(let k=0;k<30;k++){const gx=((k*97-dist)%W+W)%W;ctx.fillRect(gx,top+GY+6+(k%3)*6,10,2)}
-  // awan
-  ctx.fillStyle='#e0e0e0';
-  for(let k=0;k<3;k++){const cx=((k*330-dist*.2)%(W+100)+W+100)%(W+100)-50;ctx.fillRect(cx,top+30+k*14,50,10)}
-  obs.forEach(o=>{
-   ctx.font=o.h+'px serif';ctx.fillStyle='#000';ctx.textBaseline='bottom';
-   ctx.fillText(o.e,o.x,top+GY-o.b);
-   ctx.font='bold 10px sans-serif';ctx.fillStyle='#555';ctx.textBaseline='alphabetic';
-   if(o.air)ctx.fillText(o.n,o.x-2,top+GY-o.b-o.h-3);
-  });
-  drawStudent(p,top);
-  ctx.font='bold 16px monospace';ctx.fillStyle=p.col;ctx.textAlign='right';
-  ctx.fillText(p.name+'  '+String(p.score).padStart(5,'0')+(p.dead?'  ☠':''),W-12,top+24);
-  ctx.textAlign='left';
-  ctx.fillStyle='#777';ctx.font='13px monospace';ctx.fillText('HI '+String(hi).padStart(5,'0'),12,top+24);
-  if(i>0){ctx.strokeStyle='#999';ctx.setLineDash([6,6]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.stroke();ctx.setLineDash([])}
- });
- if(state!='run'){
-  ctx.fillStyle='rgba(255,255,255,.8)';ctx.fillRect(0,0,W,cv.height);
-  ctx.textAlign='center';ctx.fillStyle='#222';
-  ctx.font='bold 30px sans-serif';
-  const cy=cv.height/2;
-  if(state=='menu'){
-   ctx.fillText('Mahasiswa Runner',W/2,cy-14);
-   ctx.font='16px sans-serif';ctx.fillText('Tekan Spasi / Enter / Mulai',W/2,cy+16);
-  }else{
-   let t='Game Over';
-   if(mode==2){const [a,b]=players;t=a.score>b.score?'P1 (biru) menang! 🏆':b.score>a.score?'P2 (merah) menang! 🏆':'Seri!'}
-   ctx.fillText(t,W/2,cy-14);
-   ctx.font='16px sans-serif';ctx.fillText('Spasi / Enter untuk main lagi',W/2,cy+16);
-  }
-  ctx.textAlign='left';
- }
-}
-function loop(t){
- acc+=Math.min(100,t-last);last=t;
- while(acc>=16.67){if(state=='run')update();acc-=16.67}
- draw();requestAnimationFrame(loop);
-}
-setMode(2);requestAnimationFrame(loop);
-</script>
+<main>
+  <header>
+    <h1>🎓 MAHASISWA RUNNER</h1>
+    <p>Lari dari buku, laptop, tugas, dosen &amp; revisi. Siapa yang paling kuat bertahan?</p>
+  </header>
+
+  <div class="modes" role="group" aria-label="Mode">
+    <button id="m1">1 Pemain</button>
+    <button id="m2" class="on">2 Pemain</button>
+  </div>
+
+  <div class="hud">
+    <div class="card p1"><span>P1</span><b id="s1">00000</b></div>
+    <div class="card hi"><span>REKOR</span><b id="hi">00000</b></div>
+    <div class="card p2" id="card2"><span>P2</span><b id="s2">00000</b></div>
+  </div>
+
+  <div class="stage">
+    <canvas id="c" width="800" height="400"></canvas>
+    <div id="overlay">
+      <h2 id="ot">Siap kuliah?</h2>
+      <p id="op">Tekan Spasi / Enter atau tombol di bawah</p>
+      <button id="go">▶ MULAI</button>
+    </div>
+  </div>
+
+  <div class="pad">
+    <div><button id="p1j" class="b1">P1 ⬆ Lompat</button><button id="p1d" class="b1">P1 ⬇ Tunduk</button></div>
+    <div id="pad2"><button id="p2j" class="b2">P2 ⬆ Lompat</button><button id="p2d" class="b2">P2 ⬇ Tunduk</button></div>
+  </div>
+
+  <p class="keys"><span class="k1">P1 (biru)</span>: W / Spasi = lompat, S = tunduk
+  &nbsp;·&nbsp; <span class="k2">P2 (merah)</span>: ↑ = lompat, ↓ = tunduk</p>
+</main>
+<script src="game.js"></script>
 </body>
 </html>
