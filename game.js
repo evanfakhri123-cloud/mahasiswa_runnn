@@ -12,7 +12,7 @@ const cleanName = v => v.replace(/[^\p{L}\p{N} ]/gu, '').trim().slice(0, 12);
 // ---------- leaderboard ----------
 // Isi REMOTE_URL dengan URL Firebase Realtime Database (mis. 'https://proyekmu-default-rtdb.firebaseio.com')
 // agar leaderboard dipakai bersama semua pemain. Jika kosong, skor hanya tersimpan di browser ini.
-const REMOTE_URL = '';
+const REMOTE_URL = 'https://mahasiswa-ambis-game-default-rtdb.asia-southeast1.firebasedatabase.app/';
 const LB_KEY = 'ma_lb';
 let scores = [];
 const localScores = () => { try { return JSON.parse(localStorage.getItem(LB_KEY)) || []; } catch (e) { return []; } };
