@@ -46,3 +46,62 @@ canvas{display:block;width:100%;height:auto;touch-action:none;image-rendering:pi
 .keys{font-size:.8rem;opacity:.85;margin-top:14px;line-height:1.7}
 .k1{color:var(--p1);font-weight:700}.k2{color:var(--p2);font-weight:700}
 @media (hover:hover) and (pointer:fine){.pad{display:none}}
+
+/* ===== Nama pemain ===== */
+.names{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.names label{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:var(--card);border:1px solid var(--bd);flex:1;min-width:150px;max-width:260px}
+.names span{font-family:'Press Start 2P',monospace;font-size:11px}
+.nm1 span{color:var(--p1)}.nm2 span{color:var(--p2)}
+.names input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--fg);font:inherit;padding:6px 2px}
+.names input::placeholder{color:rgba(255,255,255,.4)}
+.names label:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,209,102,.2)}
+.names input.bad{animation:bad .4s}
+@keyframes bad{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ===== Leaderboard ===== */
+.lb{margin-top:18px;padding:14px;border-radius:16px;background:var(--card);border:1px solid var(--bd);text-align:left}
+.lb-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.lb-head h3{margin:0;font-size:1rem;color:var(--gold)}
+.lb-head button{padding:6px 12px;font-size:.8rem}
+ol{list-style:none;margin:0;padding:0}
+ol li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:4px;background:rgba(255,255,255,.05)}
+ol li:nth-child(1){background:linear-gradient(90deg,rgba(255,209,102,.28),rgba(255,209,102,.05))}
+ol li:nth-child(2){background:linear-gradient(90deg,rgba(200,210,230,.22),rgba(200,210,230,.04))}
+ol li:nth-child(3){background:linear-gradient(90deg,rgba(205,127,50,.25),rgba(205,127,50,.04))}
+.rk{width:28px;text-align:center;font-weight:700}
+.nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ol b{font-family:'Press Start 2P',monospace;font-size:12px;font-weight:400;color:var(--gold)}
+li.empty{justify-content:center;opacity:.7;background:none}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(5,6,20,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fade .25s}
+.modal.hide{display:none}
+.sheet{width:100%;max-width:480px;max-height:85vh;overflow:auto;padding:16px;border-radius:18px;text-align:left;
+  background:#1a1e48;border:1px solid var(--bd);box-shadow:0 20px 60px rgba(0,0,0,.6);animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{from{opacity:0;transform:scale(.85) translateY(20px)}}
+
+/* ===== Animasi masuk ===== */
+#splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:radial-gradient(900px 500px at 50% 30%,#2a2f78,#0b0d26);transition:opacity .6s,visibility .6s,transform .6s;cursor:pointer}
+#splash.gone{opacity:0;visibility:hidden;transform:scale(1.08)}
+.sp-emoji{font-size:64px;animation:hop 1s ease-in-out infinite}
+@keyframes hop{50%{transform:translateY(-18px) rotate(-8deg)}}
+.sp-title{display:flex;flex-direction:column;gap:10px;font-family:'Press Start 2P',monospace;color:var(--gold);
+  font-size:clamp(16px,5vw,30px);text-shadow:3px 3px 0 #b5651d}
+.sp-title span{opacity:0;animation:zoomIn .7s cubic-bezier(.2,1.5,.4,1) forwards}
+.sp-title span:nth-child(2){animation-delay:.35s;color:#ff8fa3}
+@keyframes zoomIn{from{opacity:0;transform:scale(2.2) translateY(-20px);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+.sp-bar{width:min(260px,70vw);height:10px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden}
+.sp-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--p1),var(--gold),var(--p2));animation:load 2s ease-out forwards}
+@keyframes load{to{width:100%}}
+#splash small{opacity:.5;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.1}}
+.rise{opacity:0}
+.ready .rise{animation:rise .7s cubic-bezier(.2,.9,.3,1.2) both;animation-delay:calc(var(--i) * .09s)}
+@keyframes rise{from{opacity:0;transform:translateY(34px) scale(.96)}to{opacity:1;transform:none}}
+.ready .stage{animation-name:stageIn}
+@keyframes stageIn{from{opacity:0;transform:perspective(900px) rotateX(14deg) translateY(40px) scale(.94)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  #splash,.sp-emoji,.sp-title span,.sp-bar i,#splash small,.ready .rise{animation:none!important;opacity:1;width:auto}
+  .sp-bar i{width:100%}
+}
+@media (max-width:520px){#overlay p{display:none}}
