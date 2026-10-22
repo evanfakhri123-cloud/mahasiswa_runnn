@@ -3,46 +3,75 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mahasiswa Runner</title>
+<title>Mahasiswa Ambiss</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+<div id="splash" aria-hidden="true">
+  <div class="sp-emoji">🎓</div>
+  <div class="sp-title"><span>MAHASISWA</span><span>AMBISS</span></div>
+  <div class="sp-bar"><i></i></div>
+  <small>ketuk untuk lanjut</small>
+</div>
+
 <main>
-  <header>
-    <h1>🎓 MAHASISWA RUNNER</h1>
+  <header class="rise" style="--i:0">
+    <h1>🎓 MAHASISWA AMBISS</h1>
     <p>Lari dari buku, laptop, tugas, dosen &amp; revisi. Siapa yang paling kuat bertahan?</p>
   </header>
 
-  <div class="modes" role="group" aria-label="Mode">
+  <div class="modes rise" style="--i:1" role="group" aria-label="Mode">
     <button id="m1">1 Pemain</button>
     <button id="m2" class="on">2 Pemain</button>
   </div>
 
-  <div class="hud">
-    <div class="card p1"><span>P1</span><b id="s1">00000</b></div>
-    <div class="card hi"><span>REKOR</span><b id="hi">00000</b></div>
-    <div class="card p2" id="card2"><span>P2</span><b id="s2">00000</b></div>
+  <div class="names rise" style="--i:2">
+    <label class="nm1"><span>P1</span><input id="n1" maxlength="12" placeholder="Nama pemain 1" autocomplete="off"></label>
+    <label class="nm2" id="nw2"><span>P2</span><input id="n2" maxlength="12" placeholder="Nama pemain 2" autocomplete="off"></label>
   </div>
 
-  <div class="stage">
+  <div class="hud rise" style="--i:3">
+    <div class="card p1"><span id="l1">P1</span><b id="s1">00000</b></div>
+    <div class="card hi"><span>REKOR</span><b id="hi">00000</b></div>
+    <div class="card p2" id="card2"><span id="l2">P2</span><b id="s2">00000</b></div>
+  </div>
+
+  <div class="stage rise" style="--i:4">
     <canvas id="c" width="800" height="400"></canvas>
     <div id="overlay">
       <h2 id="ot">Siap kuliah?</h2>
-      <p id="op">Tekan Spasi / Enter atau tombol di bawah</p>
+      <p id="op">Isi nama, lalu tekan Spasi / Enter atau tombol di bawah</p>
       <button id="go">▶ MULAI</button>
     </div>
   </div>
 
-  <div class="pad">
+  <div class="pad rise" style="--i:5">
     <div><button id="p1j" class="b1">P1 ⬆ Lompat</button><button id="p1d" class="b1">P1 ⬇ Tunduk</button></div>
     <div id="pad2"><button id="p2j" class="b2">P2 ⬆ Lompat</button><button id="p2d" class="b2">P2 ⬇ Tunduk</button></div>
   </div>
 
-  <p class="keys"><span class="k1">P1 (biru)</span>: W / Spasi = lompat, S = tunduk
+  <p class="keys rise" style="--i:6"><span class="k1">P1 (biru)</span>: W / Spasi = lompat, S = tunduk
   &nbsp;·&nbsp; <span class="k2">P2 (merah)</span>: ↑ = lompat, ↓ = tunduk</p>
+
+  <section class="lb rise" style="--i:7" aria-label="Leaderboard">
+    <div class="lb-head">
+      <h3>🏆 Leaderboard</h3>
+      <button id="lbMore">Lihat semua (<span id="lbCount">0</span>)</button>
+    </div>
+    <ol id="lbTop"></ol>
+  </section>
 </main>
+
+<div id="modal" class="modal hide" role="dialog" aria-modal="true" aria-label="Leaderboard lengkap">
+  <div class="sheet">
+    <div class="lb-head"><h3>🏆 Leaderboard Lengkap</h3><button id="lbClose">✕ Tutup</button></div>
+    <ol id="lbAll"></ol>
+  </div>
+</div>
+
 <script src="game.js"></script>
 </body>
 </html>
