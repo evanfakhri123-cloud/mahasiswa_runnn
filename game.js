@@ -7,6 +7,44 @@ let speed, dist, frame, shake = 0, acc = 0, last = 0, hi = 0;
 try { hi = +localStorage.getItem('mr_hi') || 0; } catch (e) {}
 const keys = {};
 const pad5 = n => String(n).padStart(5, '0');
+const cleanName = v => v.replace(/[^\p{L}\p{N} ]/gu, '').trim().slice(0, 12);
+
+// ---------- leaderboard ----------
+// Isi REMOTE_URL dengan URL Firebase Realtime Database (mis. 'https://proyekmu-default-rtdb.firebaseio.com')
+// agar leaderboard dipakai bersama semua pemain. Jika kosong, skor hanya tersimpan di browser ini.
+const REMOTE_URL = '';
+const LB_KEY = 'ma_lb';
+let scores = [];
+const localScores = () => { try { return JSON.parse(localStorage.getItem(LB_KEY)) || []; } catch (e) { return []; } };
+async function loadScores() {
+  scores = localScores();
+  if (REMOTE_URL) {
+    try { const d = await (await fetch(REMOTE_URL.replace(/\/$/, '') + '/scores.json')).json(); if (d) scores = Object.values(d); } catch (e) {}
+  }
+  scores = scores.filter(s => s && typeof s.name == 'string' && +s.score >= 0)
+    .sort((a, b) => b.score - a.score || a.t - b.t).slice(0, 100);
+  renderLB();
+}
+async function addScore(name, score) {
+  const e = { name, score, t: Date.now() };
+  const list = localScores(); list.push(e); list.sort((a, b) => b.score - a.score);
+  try { localStorage.setItem(LB_KEY, JSON.stringify(list.slice(0, 100))); } catch (_) {}
+  if (REMOTE_URL) { try { await fetch(REMOTE_URL.replace(/\/$/, '') + '/scores.json', { method: 'POST', body: JSON.stringify(e) }); } catch (_) {} }
+}
+function fillList(el, list) {
+  el.textContent = '';
+  if (!list.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'Belum ada skor. Jadilah yang pertama!'; el.appendChild(li); return; }
+  const medal = ['🥇', '🥈', '🥉'];
+  list.forEach((s, i) => {
+    const li = document.createElement('li'), rk = document.createElement('span'), nm = document.createElement('span'), sc = document.createElement('b');
+    rk.className = 'rk'; rk.textContent = medal[i] || i + 1;
+    nm.className = 'nm'; nm.textContent = s.name;
+    sc.textContent = pad5(s.score);
+    li.append(rk, nm, sc); el.appendChild(li);
+  });
+}
+function renderLB() { fillList($('lbTop'), scores.slice(0, 5)); fillList($('lbAll'), scores); $('lbCount').textContent = scores.length; }
+const closeModal = () => $('modal').classList.add('hide');
 
 const defs = [
   { e: '📚', n: 'Buku',    w: 30, h: 30, b: 0 },
@@ -35,7 +73,7 @@ function reset() {
   const cols = ['#4da3ff', '#ff5d6c'];
   players = [];
   for (let i = 0; i < mode; i++)
-    players.push({ y: 0, vy: 0, duck: false, dead: false, score: 0, col: cols[i], name: 'P' + (i + 1) });
+    players.push({ y: 0, vy: 0, duck: false, dead: false, score: 0, col: cols[i], name: cleanName($('n' + (i + 1)).value) || 'P' + (i + 1) });
   obs = []; parts = []; speed = 6; dist = 0; frame = 0; shake = 0;
   hud();
 }
@@ -43,13 +81,23 @@ function setMode(m) {
   mode = m;
   $('m1').classList.toggle('on', m == 1);
   $('m2').classList.toggle('on', m == 2);
-  $('card2').style.display = $('pad2').style.display = m == 2 ? '' : 'none';
+  $('card2').style.display = $('pad2').style.display = $('nw2').style.display = m == 2 ? '' : 'none';
   cv.height = LH * m; state = 'menu'; reset();
   showOverlay('Siap kuliah?', 'Tekan Spasi / Enter atau tombol di bawah', '▶ MULAI');
 }
 function showOverlay(t, p, b) { $('ot').textContent = t; $('op').textContent = p; $('go').textContent = b; $('overlay').classList.remove('hide'); }
-function start() { reset(); state = 'run'; $('overlay').classList.add('hide'); beep(660, .12); }
+function start() {
+  for (let i = 0; i < mode; i++) {
+    if (!cleanName($('n' + (i + 1)).value)) {
+      const el = $('n' + (i + 1)); el.classList.remove('bad'); void el.offsetWidth; el.classList.add('bad'); el.focus(); return;
+    }
+  }
+  try { localStorage.setItem('ma_names', JSON.stringify([$('n1').value, $('n2').value])); } catch (e) {}
+  document.activeElement && document.activeElement.blur();
+  reset(); state = 'run'; $('overlay').classList.add('hide'); beep(660, .12);
+}
 function hud() {
+  players.forEach((p, i) => $('l' + (i + 1)).textContent = p.name);
   $('s1').textContent = pad5(players[0] ? players[0].score : 0);
   $('s2').textContent = pad5(players[1] ? players[1].score : 0);
   $('hi').textContent = pad5(hi);
@@ -60,6 +108,8 @@ $('m1').onclick = e => { setMode(1); e.target.blur(); };
 $('m2').onclick = e => { setMode(2); e.target.blur(); };
 $('go').onclick = e => { start(); e.target.blur(); };
 addEventListener('keydown', e => {
+  if (!$('modal').classList.contains('hide')) { if (e.code == 'Escape') closeModal(); return; }
+  if (e.target.tagName == 'INPUT') { if (e.code == 'Enter' && state != 'run') start(); return; }
   if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
   keys[e.code] = true;
   if (state != 'run' && (e.code == 'Enter' || e.code == 'Space')) start();
@@ -121,10 +171,11 @@ function end() {
   const best = Math.max(...players.map(p => p.score));
   if (best > hi) { hi = best; try { localStorage.setItem('mr_hi', hi); } catch (e) {} }
   hud();
+  Promise.all(players.filter(p => p.score > 0).map(p => addScore(p.name, p.score))).then(loadScores);
   let t = 'GAME OVER 💀';
   if (mode == 2) {
     const [a, b] = players;
-    t = a.score > b.score ? '🏆 P1 (BIRU) MENANG!' : b.score > a.score ? '🏆 P2 (MERAH) MENANG!' : 'SERI! 🤝';
+    t = a.score > b.score ? '🏆 ' + a.name.toUpperCase() + ' MENANG!' : b.score > a.score ? '🏆 ' + b.name.toUpperCase() + ' MENANG!' : 'SERI! 🤝';
   }
   setTimeout(() => showOverlay(t, 'Skor: ' + players.map(p => p.name + ' ' + pad5(p.score)).join('  ·  '), '↻ MAIN LAGI'), 700);
 }
@@ -256,5 +307,11 @@ function loop(t) {
   while (acc >= 16.67) { if (state == 'run') update(); stepParts(); acc -= 16.67; if (state != 'run') frame++; }
   draw(); requestAnimationFrame(loop);
 }
-setMode(2); requestAnimationFrame(loop);
+try { const sv = JSON.parse(localStorage.getItem('ma_names')); if (sv) { $('n1').value = sv[0] || ''; $('n2').value = sv[1] || ''; } } catch (e) {}
+$('lbMore').onclick = () => $('modal').classList.remove('hide');
+$('lbClose').onclick = closeModal;
+$('modal').onclick = e => { if (e.target.id == 'modal') closeModal(); };
+const enter = () => { $('splash').classList.add('gone'); document.body.classList.add('ready'); };
+$('splash').onclick = enter; setTimeout(enter, 2400);
+loadScores(); setMode(2); requestAnimationFrame(loop);
 })();
